@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>그림책 추천 게시판</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Noto Sans KR) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* 피치 크림 (#f8eae2) 테마 설정 */
+        :root {
+            --peach-main: #fbf8f8;
+            --peach-strong: #f1d5c7;
+            --peach-dark: #4a3e3d;
+            --peach-primary: #e08b7e;
+            --peach-btn: #eab4ac;
+            --peach-btn-hover: #e08b7e;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        .bg-peach-main { background-color: var(--peach-main) !important; }
+        .bg-peach-light { background-color: var(--peach-main) !important; }
+        .border-peach { border-color: var(--peach-strong) !important; }
+        .border-peach-strong { border-color: var(--peach-strong) !important; }
+        .text-peach-dark { color: var(--peach-dark) !important; }
+        .text-peach-primary { color: var(--peach-primary) !important; }
+        .bg-peach-btn { background-color: var(--peach-btn) !important; }
+        .bg-peach-btn:hover { background-color: var(--peach-btn-hover) !important; }
+
+        input[type="text"], input[type="password"], input[type="url"], textarea {
+            border: 1px solid var(--peach-strong);
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+        input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus, textarea:focus {
+            border-color: var(--peach-primary);
+            box-shadow: 0 0 0 2px rgba(224, 139, 126, 0.2);
+        }
+
+        button {
+            border: none;
+            cursor: pointer;
+            border-radius: 0.75rem;
+        }
+
+        /* 스크롤바 모던 스타일 정의 (투명 색상) */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: transparent transparent;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: transparent;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen pb-12">
+
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 mb-6 border-b border-peach-strong">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-peach-dark tracking-tight mt-1">그림책을 추천해 주세요</h1>
+            </div>
+            <button id="btnToggleForm" onclick="toggleForm()" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-peach-btn hover:bg-peach-primary text-white font-medium text-sm rounded-xl transition shadow-sm hover:shadow-md shrink-0">
+                <i class="fa-solid fa-plus text-xs"></i>
+                <span id="btnToggleText">추천하기</span>
+            </button>
+        </header>
+
+        <section id="formSection" class="hidden mb-8 bg-peach-light border border-peach-strong rounded-2xl p-5 sm:p-6 shadow-sm transition-all">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-peach">
+                <h2 id="formTitle" class="text-lg font-bold text-peach-dark flex items-center gap-2">
+                    <i class="fa-solid fa-pen-nib text-peach-primary"></i> 추천하기
+                </h2>
+                <button type="button" onclick="toggleForm(false)" class="text-stone-400 hover:text-stone-600 p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="postForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <input type="hidden" id="postId" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-peach-dark mb-1">이름 <span class="text-rose-500">*</span></label>
+                        <input type="text" id="inputAuthor" required placeholder="예: 익명" class="w-full text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-peach-dark mb-1">비밀번호 (수정/삭제용) <span class="text-rose-500">*</span></label>
+                        <input type="password" id="inputPassword" required placeholder="비밀번호 설정" class="w-full text-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-peach-dark mb-1">책 제목 <span class="text-rose-500">*</span></label>
+                        <input type="text" id="inputBookTitle" required placeholder="예: 알사탕" class="w-full text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-peach-dark mb-1">저자 및 출판사 <span class="text-rose-500">*</span></label>
+                        <input type="text" id="inputBookMeta" required placeholder="예: 백희나/책읽는곰" class="w-full text-sm">
+                    </div>
+                </div>
+
+                <div class="bg-white p-3.5 rounded-xl border border-peach-strong space-y-2">
+                    <label class="block text-xs font-semibold text-peach-dark">책 표지 / 이미지 첨부</label>
+                    <div>
+                        <span class="block text-[11px] text-stone-500 mb-1">이미지 URL 입력</span>
+                        <input type="url" id="inputImageUrl" oninput="handleImageUrlInput()" placeholder="https://example.com/image.jpg" class="w-full text-xs">
+                    </div>
+                    <div id="imagePreviewContainer" class="hidden pt-2">
+                        <p class="text-[11px] text-stone-500 mb-1">이미지 미리보기:</p>
+                        <div class="relative inline-block">
+                            <img id="imagePreview" src="" alt="미리보기" class="h-28 w-auto object-cover rounded-lg border border-peach-strong">
+                            <button type="button" onclick="clearImageInput()" class="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-peach-dark mb-1">키워드 (쉼표로 구분) <span class="text-rose-500">*</span></label>
+                    <input type="text" id="inputKeywords" required placeholder="예: 상상력, 공감, 마음의소리" class="w-full text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-peach-dark mb-1">내용 및 수업 활용 <span class="text-rose-500">*</span></label>
+                    <textarea id="inputContent" rows="4" required placeholder="소개할 내용을 적어주세요" class="w-full text-sm resize-y"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" onclick="toggleForm(false)" class="px-4 py-2 text-sm font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-xl">
+                        취소
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-peach-btn hover:bg-peach-primary text-white text-sm font-medium rounded-xl transition">
+                        저장하기
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
+            <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-xs pointer-events-none z-10"></i>
+                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="책 제목, 저자, 키워드, 내용 검색..." class="w-full !pl-9 pr-8 py-2 text-xs sm:text-sm">
+                <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 text-xs z-10">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center justify-between sm:justify-end gap-2 text-xs text-stone-500 px-1">
+                <span id="activeFilterBadge" class="hidden inline-flex items-center gap-1 bg-white text-peach-dark px-2.5 py-1 rounded-lg border border-peach-strong font-medium">
+                    <span id="activeFilterText">#키워드</span>
+                    <button onclick="clearKeywordFilter()" class="hover:text-stone-900 ml-1"><i class="fa-solid fa-xmark text-xs"></i></button>
+                </span>
+                <span>총 <strong id="postCount" class="text-peach-primary font-bold">0</strong>개 기록</span>
+            </div>
+        </div>
+
+        <div id="postsList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- Dynamic Cards Loaded via JS -->
+        </div>
+    </div>
+
+    <div id="passwordModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 max-w-sm w-full shadow-xl">
+            <div class="text-center mb-4">
+                <div class="w-12 h-12 bg-amber-50 text-peach-primary rounded-2xl flex items-center justify-center mx-auto mb-3 text-lg">
+                    <i id="modalIcon" class="fa-solid fa-lock"></i>
+                </div>
+                <h3 id="modalTitle" class="text-base font-bold text-slate-800">비밀번호 확인</h3>
+                <p id="modalDescription" class="text-xs text-slate-500 mt-1">게시글 비밀번호 또는 마스터 비밀번호를 입력해주세요.</p>
+            </div>
+
+            <form onsubmit="confirmPasswordAction(event)" class="space-y-4">
+                <div>
+                    <input type="password" id="modalPasswordInput" required placeholder="비밀번호 입력" class="w-full text-sm text-center">
+                    <p id="modalErrorMsg" class="hidden text-xs text-rose-500 mt-1.5 text-center font-medium"></p>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closePasswordModal()" class="w-1/2 py-2 text-xs sm:text-sm font-medium text-slate-600 bg-slate-100 rounded-xl">
+                        취소
+                    </button>
+                    <button type="submit" id="modalConfirmBtn" class="w-1/2 py-2 bg-peach-btn text-white text-xs sm:text-sm font-medium rounded-xl">
+                        확인
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div id="toastContent" class="flex items-center gap-2.5 px-4 py-3 bg-slate-800 text-white text-xs sm:text-sm font-medium rounded-xl shadow-lg border border-slate-700">
+            <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+            <span id="toastMessage">처리되었습니다.</span>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'picturebook-board-app';
+
+        window.isCloudMode = false;
+        window.saveCloudPost = null;
+        window.deleteCloudPost = null;
+
+        async function initCloudStorage() {
+            if (typeof __firebase_config === 'undefined' || !__firebase_config) {
+                console.warn('Firebase config missing. Using local storage fallback.');
+                initDataLocal();
+                return;
+            }
+
+            try {
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                const db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                window.isCloudMode = true;
+                const postsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'picturebook_posts');
+
+                onSnapshot(postsColRef, (snapshot) => {
+                    const list = [];
+                    snapshot.forEach((docSnap) => {
+                        list.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                    postsData = list;
+                    saveToLocalStorage();
+                    renderPosts();
+                }, (error) => {
+                    console.error('Real-time database error:', error);
+                    initDataLocal();
+                });
+
+                window.saveCloudPost = async (postObj) => {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'picturebook_posts', postObj.id);
+                    await setDoc(docRef, postObj, { merge: true });
+                };
+
+                window.deleteCloudPost = async (postId) => {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'picturebook_posts', postId);
+                    await deleteDoc(docRef);
+                };
+
+            } catch (err) {
+                console.error('Failed to connect to cloud database:', err);
+                initDataLocal();
+            }
+        }
+
+        window.initCloudStorage = initCloudStorage;
+    </script>
+
+    <script>
+        /* 노션 iframe 보안 및 세션 메모리 저장소 폴백 */
+        const MASTER_PASSWORD = 'admin';
+        let memoryStorage = {};
+        let postsData = [];
+        let selectedKeyword = null;
+        let searchQuery = '';
+        let pendingAction = null;
+        let currentImageBase64 = '';
+
+        /* 노션 iframe Storage Wrapper */
+        function safeGetItem(key) {
+            try {
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    return window.localStorage.getItem(key);
+                }
+            } catch (e) {
+                console.warn('Notion iframe storage restricted. Using in-memory store:', e);
+            }
+            return memoryStorage[key] || null;
+        }
+
+        function safeSetItem(key, value) {
+            try {
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    window.localStorage.setItem(key, value);
+                    return;
+                }
+            } catch (e) {
+                console.warn('Notion iframe storage write restricted. Using in-memory store:', e);
+            }
+            memoryStorage[key] = value;
+        }
+
+        function saveToLocalStorage() {
+            safeSetItem('picturebook_posts', JSON.stringify(postsData));
+        }
+
+        function initDataLocal() {
+            try {
+                const saved = safeGetItem('picturebook_posts');
+                if (saved) {
+                    postsData = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.warn('Data parse error:', e);
+            }
+
+            if (!postsData || !Array.isArray(postsData) || postsData.length === 0) {
+                postsData = [
+                    {
+                        id: 'demo-1',
+                        author: '김독서',
+                        password: '123',
+                        bookTitle: '알사탕',
+                        bookMeta: '백희나 저 / 책읽는곰',
+                        imageUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
+                        keywords: ['상상력', '공감', '마음의소리'],
+                        content: '타인의 마음과 소리를 들을 수 있게 되는 신비한 알사탕 이야기. 아이들과 용기에 대해 나누기 좋은 그림책.',
+                        createdAt: Date.now() - 3600000 * 2
+                    },
+                    {
+                        id: 'demo-2',
+                        author: '이서평',
+                        password: '123',
+                        bookTitle: '수박수영장',
+                        bookMeta: '안녕달 저 / 창비',
+                        imageUrl: '',
+                        keywords: ['여름', '가족', '추억'],
+                        content: '시원한 수박 속에서 펼쳐지는 여름날의 정겨운 이야기. 무더위를 날려주는 시각적 즐거움이 가득하다.',
+                        createdAt: Date.now() - 3600000 * 24
+                    }
+                ];
+                saveToLocalStorage();
+            }
+            renderPosts();
+        }
+
+        window.handleImageUrlInput = function() {
+            const urlInput = document.getElementById('inputImageUrl');
+            if (!urlInput) return;
+            const url = urlInput.value.trim();
+            if (url) {
+                currentImageBase64 = url;
+                showImagePreview(url);
+            } else {
+                clearImageInput();
+            }
+        };
+
+        window.showImagePreview = function(src) {
+            const container = document.getElementById('imagePreviewContainer');
+            const img = document.getElementById('imagePreview');
+            if (img) img.src = src;
+            if (container) container.classList.remove('hidden');
+        };
+
+        window.clearImageInput = function() {
+            currentImageBase64 = '';
+            const urlInput = document.getElementById('inputImageUrl');
+            if (urlInput) urlInput.value = '';
+
+            const previewImg = document.getElementById('imagePreview');
+            if (previewImg) previewImg.src = '';
+
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            if (previewContainer) previewContainer.classList.add('hidden');
+        };
+
+        window.toggleForm = function(forceShow) {
+            const section = document.getElementById('formSection');
+            const btnText = document.getElementById('btnToggleText');
+            if (!section || !btnText) return;
+            
+            const isHidden = section.classList.contains('hidden');
+            const shouldShow = forceShow !== undefined ? forceShow : isHidden;
+
+            if (shouldShow) {
+                section.classList.remove('hidden');
+                btnText.textContent = '닫기';
+            } else {
+                section.classList.add('hidden');
+                btnText.textContent = '추천하기';
+                resetForm();
+            }
+        };
+
+        window.renderPosts = function() {
+            const listEl = document.getElementById('postsList');
+            const countEl = document.getElementById('postCount');
+            if (!listEl || !countEl) return;
+
+            let filtered = postsData.filter(post => {
+                if (selectedKeyword && !post.keywords.includes(selectedKeyword)) {
+                    return false;
+                }
+                if (searchQuery) {
+                    const q = searchQuery.toLowerCase();
+                    const titleMatch = post.bookTitle?.toLowerCase().includes(q);
+                    const metaMatch = post.bookMeta?.toLowerCase().includes(q);
+                    const authorMatch = post.author?.toLowerCase().includes(q);
+                    const contentMatch = post.content?.toLowerCase().includes(q);
+                    const keywordMatch = post.keywords?.some(k => k.toLowerCase().includes(q));
+                    return titleMatch || metaMatch || authorMatch || contentMatch || keywordMatch;
+                }
+                return true;
+            });
+
+            countEl.textContent = filtered.length;
+
+            if (filtered.length === 0) {
+                listEl.className = "col-span-full";
+                listEl.innerHTML = `
+                    <div class="bg-peach-light border border-peach-strong rounded-2xl p-12 text-center">
+                        <div class="w-12 h-12 bg-white text-peach-primary rounded-full flex items-center justify-center mx-auto mb-3 text-lg border border-peach-strong">
+                            <i class="fa-solid fa-book-open"></i>
+                        </div>
+                        <h3 class="text-sm font-bold text-peach-dark">기록이 없습니다.</h3>
+                        <p class="text-xs text-stone-500 mt-1">첫 번째 그림책 감상평을 작성해보세요!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4";
+
+            listEl.innerHTML = filtered.map(post => {
+                const tagsHtml = (post.keywords || []).map(kw => `
+                    <button onclick="filterByKeyword('${escapeHtml(kw)}')" class="inline-block px-2 py-0.5 text-[11px] font-medium bg-peach-main hover:bg-peach-strong text-peach-dark rounded-full border border-peach-strong transition">
+                        #${escapeHtml(kw)}
+                    </button>
+                `).join(' ');
+
+                const hasImage = post.imageUrl && post.imageUrl.trim().length > 0;
+                /* 이미지 없을 경우 흰 배경에 책 아이콘 표시 */
+                const fallbackHtml = `<div class="w-full h-44 bg-white rounded-t-2xl flex items-center justify-center border-b border-peach-strong"><i class="fa-solid fa-book-open text-peach-primary text-4xl opacity-70"></i></div>`;
+
+                const imageSection = hasImage 
+                    ? `<div class="w-full h-44 overflow-hidden bg-stone-100 rounded-t-2xl relative">
+                        <img src="${escapeHtml(post.imageUrl)}" alt="${escapeHtml(post.bookTitle)}" class="w-full h-full object-cover hover:scale-105 transition duration-300" onerror="this.onerror=null; this.parentElement.outerHTML='${escapeHtml(fallbackHtml)}';">
+                       </div>`
+                    : fallbackHtml;
+
+                const trimmedContent = post.content ? post.content.trim() : '';
+
+                return `
+                    <article class="bg-white border border-peach-strong hover:border-peach-primary rounded-2xl overflow-hidden transition shadow-xs hover:shadow-md flex flex-col justify-between">
+                        <div>
+                            ${imageSection}
+
+                            <div class="p-4">
+                                <div class="flex items-start justify-between gap-1.5 mb-1.5">
+                                    <h3 class="text-base font-bold text-peach-dark leading-snug line-clamp-2">
+                                        ${escapeHtml(post.bookTitle)}
+                                    </h3>
+                                    <div class="flex items-center gap-0.5 shrink-0 bg-peach-light p-1 rounded-xl border border-peach">
+                                        <button onclick="openPasswordModal('edit', '${post.id}')" title="수정" class="p-1 text-stone-400 hover:text-peach-primary rounded-lg hover:bg-white text-xs">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                        <button onclick="openPasswordModal('delete', '${post.id}')" title="삭제" class="p-1 text-stone-400 hover:text-rose-600 rounded-lg hover:bg-white text-xs">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <p class="text-xs text-stone-500 font-medium mb-2.5 truncate">
+                                    <i class="fa-solid fa-feather-pointed text-peach-primary mr-1"></i>${escapeHtml(post.bookMeta)}
+                                </p>
+
+                                <div class="flex flex-wrap gap-1 mb-3">
+                                    ${tagsHtml}
+                                </div>
+
+                                <div class="text-xs text-stone-700 leading-relaxed whitespace-pre-line break-words bg-peach-light/50 p-2.5 rounded-xl border border-peach text-stone-600 max-h-28 overflow-y-auto overflow-x-hidden">${escapeHtml(trimmedContent)}</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs text-stone-400 px-4 py-2.5 bg-stone-50 border-t border-peach">
+                            <span class="font-medium text-peach-dark text-xs">
+                                <i class="fa-regular fa-circle-user mr-1"></i>${escapeHtml(post.author)}
+                            </span>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        };
+
+        window.handleFormSubmit = async function(e) {
+            if (e) e.preventDefault();
+            
+            const id = document.getElementById('postId').value;
+            const author = document.getElementById('inputAuthor').value.trim();
+            const password = document.getElementById('inputPassword').value.trim();
+            const bookTitle = document.getElementById('inputBookTitle').value.trim();
+            const bookMeta = document.getElementById('inputBookMeta').value.trim();
+            const keywordsRaw = document.getElementById('inputKeywords').value;
+            const content = document.getElementById('inputContent').value.trim();
+
+            const keywords = keywordsRaw.split(',')
+                .map(k => k.trim())
+                .filter(k => k.length > 0);
+
+            const targetId = id || ('post-' + Date.now());
+            const postPayload = {
+                id: targetId,
+                author,
+                password,
+                bookTitle,
+                bookMeta,
+                imageUrl: currentImageBase64,
+                keywords,
+                content,
+                createdAt: Date.now()
+            };
+
+            if (window.isCloudMode && typeof window.saveCloudPost === 'function') {
+                try {
+                    await window.saveCloudPost(postPayload);
+                    showToast(id ? '게시글이 수정되었습니다.' : '새로운 기록이 등록되었습니다.');
+                } catch (err) {
+                    console.error('Cloud save failed:', err);
+                    showToast('클라우드 저장 실패. 로컬에 저장합니다.', 'error');
+                }
+            } else {
+                if (id) {
+                    const idx = postsData.findIndex(p => p.id === id);
+                    if (idx !== -1) {
+                        postsData[idx] = postPayload;
+                        saveToLocalStorage();
+                    }
+                    showToast('게시글이 수정되었습니다.');
+                } else {
+                    postsData.unshift(postPayload);
+                    saveToLocalStorage();
+                    showToast('새로운 기록이 등록되었습니다.');
+                }
+                renderPosts();
+            }
+
+            resetForm();
+            toggleForm(false);
+        };
+
+        window.openPasswordModal = function(actionType, postId) {
+            pendingAction = { type: actionType, postId: postId };
+            const modal = document.getElementById('passwordModal');
+            const titleEl = document.getElementById('modalTitle');
+            const iconEl = document.getElementById('modalIcon');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            const errorMsg = document.getElementById('modalErrorMsg');
+            const passwordInput = document.getElementById('modalPasswordInput');
+
+            if (!modal || !passwordInput) return;
+
+            passwordInput.value = '';
+            if (errorMsg) errorMsg.classList.add('hidden');
+
+            if (actionType === 'delete') {
+                if (titleEl) titleEl.textContent = '게시글 삭제';
+                if (iconEl) iconEl.className = 'fa-solid fa-trash-can text-rose-500';
+                if (confirmBtn) confirmBtn.className = 'w-1/2 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-medium rounded-xl transition shadow-sm';
+            } else {
+                if (titleEl) titleEl.textContent = '게시글 수정';
+                if (iconEl) iconEl.className = 'fa-solid fa-pen text-peach-primary';
+                if (confirmBtn) confirmBtn.className = 'w-1/2 py-2 bg-peach-btn hover:bg-peach-btn/90 text-white text-xs sm:text-sm font-medium rounded-xl transition shadow-sm';
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            passwordInput.focus();
+        };
+
+        window.closePasswordModal = function() {
+            const modal = document.getElementById('passwordModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            pendingAction = null;
+        };
+
+        window.confirmPasswordAction = async function(e) {
+            if (e) e.preventDefault();
+            if (!pendingAction) return;
+
+            const inputPass = document.getElementById('modalPasswordInput').value;
+            const errorMsg = document.getElementById('modalErrorMsg');
+            const post = postsData.find(p => p.id === pendingAction.postId);
+
+            if (!post) {
+                if (errorMsg) {
+                    errorMsg.textContent = '게시글을 찾을 수 없습니다.';
+                    errorMsg.classList.remove('hidden');
+                }
+                return;
+            }
+
+            /* 개별 비밀번호 또는 마스터 비밀번호(admin) 승인 */
+            if (post.password !== inputPass && inputPass !== MASTER_PASSWORD) {
+                if (errorMsg) {
+                    errorMsg.textContent = '비밀번호가 일치하지 않습니다.';
+                    errorMsg.classList.remove('hidden');
+                }
+                document.getElementById('modalPasswordInput').focus();
+                return;
+            }
+
+            const { type, postId } = pendingAction;
+            closePasswordModal();
+
+            if (type === 'delete') {
+                if (window.isCloudMode && typeof window.deleteCloudPost === 'function') {
+                    try {
+                        await window.deleteCloudPost(postId);
+                        showToast('게시글이 삭제되었습니다.');
+                    } catch (err) {
+                        console.error('Cloud delete failed:', err);
+                        showToast('삭제 실패', 'error');
+                    }
+                } else {
+                    postsData = postsData.filter(p => p.id !== postId);
+                    saveToLocalStorage();
+                    showToast('게시글이 삭제되었습니다.');
+                    renderPosts();
+                }
+            } else if (type === 'edit') {
+                document.getElementById('postId').value = post.id;
+                document.getElementById('inputAuthor').value = post.author || '';
+                document.getElementById('inputPassword').value = post.password || '';
+                document.getElementById('inputBookTitle').value = post.bookTitle || '';
+                document.getElementById('inputBookMeta').value = post.bookMeta || '';
+                document.getElementById('inputKeywords').value = (post.keywords || []).join(', ');
+                document.getElementById('inputContent').value = post.content || '';
+                
+                if (post.imageUrl) {
+                    currentImageBase64 = post.imageUrl;
+                    const urlInput = document.getElementById('inputImageUrl');
+                    if (urlInput && post.imageUrl.startsWith('http')) {
+                        urlInput.value = post.imageUrl;
+                    }
+                    showImagePreview(post.imageUrl);
+                } else {
+                    clearImageInput();
+                }
+
+                const formTitle = document.getElementById('formTitle');
+                if (formTitle) formTitle.innerHTML = `<i class="fa-solid fa-pen text-peach-primary"></i> 기록 수정`;
+                toggleForm(true);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        function resetForm() {
+            const form = document.getElementById('postForm');
+            if (form) form.reset();
+            const postId = document.getElementById('postId');
+            if (postId) postId.value = '';
+            clearImageInput();
+            const formTitle = document.getElementById('formTitle');
+            if (formTitle) formTitle.innerHTML = `<i class="fa-solid fa-pen-nib text-peach-primary"></i> 새로 추천하기`;
+        }
+
+        window.filterByKeyword = function(kw) {
+            selectedKeyword = kw;
+            const badge = document.getElementById('activeFilterBadge');
+            const text = document.getElementById('activeFilterText');
+            if (text) text.textContent = '#' + kw;
+            if (badge) badge.classList.remove('hidden');
+            renderPosts();
+        };
+
+        window.clearKeywordFilter = function() {
+            selectedKeyword = null;
+            const badge = document.getElementById('activeFilterBadge');
+            if (badge) badge.classList.add('hidden');
+            renderPosts();
+        };
+
+        window.handleSearch = function() {
+            const input = document.getElementById('searchInput');
+            if (!input) return;
+            searchQuery = input.value.trim();
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (clearBtn) {
+                if (searchQuery.length > 0) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+            }
+            renderPosts();
+        };
+
+        window.clearSearch = function() {
+            const input = document.getElementById('searchInput');
+            if (input) input.value = '';
+            searchQuery = '';
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (clearBtn) clearBtn.classList.add('hidden');
+            renderPosts();
+        };
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const messageEl = document.getElementById('toastMessage');
+            const iconEl = document.getElementById('toastIcon');
+
+            if (!toast || !messageEl || !iconEl) return;
+
+            messageEl.textContent = msg;
+            if (type === 'error') {
+                iconEl.className = 'fa-solid fa-circle-exclamation text-rose-400';
+            } else {
+                iconEl.className = 'fa-solid fa-circle-check text-emerald-400';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function startApp() {
+            if (typeof window.initCloudStorage === 'function') {
+                window.initCloudStorage();
+            } else {
+                initDataLocal();
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startApp);
+        } else {
+            startApp();
+        }
+        window.onload = startApp;
+    </script>
+</body>
+</html>
