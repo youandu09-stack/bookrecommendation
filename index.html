@@ -14,7 +14,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* 피치 크림 (#f8eae2) 메인 테마 설정 */
         :root {
             --peach-main: #f8eae2;
             --peach-strong: #f1d5c7;
@@ -26,7 +25,7 @@
         
         body {
             font-family: 'Noto Sans KR', sans-serif;
-            background-color: #faf7f5;
+            background-color: #ffffff;
             margin: 0;
             padding: 0;
             user-select: none;
@@ -65,7 +64,7 @@
             height: 6px;
         }
         ::-webkit-scrollbar-thumb {
-            background: #e5c3b5;
+            background: #eab4ac;
             border-radius: 9999px;
         }
     </style>
@@ -161,7 +160,7 @@
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
             <div class="relative flex-1">
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-xs z-10 pointer-events-none"></i>
-                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="책 제목, 저자, 키워드, 내용 검색..." class="w-full !pl-10 !pr-8 py-2 text-xs sm:text-sm">
+                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="검색" class="w-full !pl-10 !pr-8 py-2 text-xs sm:text-sm">
                 <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 text-xs z-10">
                     <i class="fa-solid fa-circle-xmark"></i>
                 </button>
