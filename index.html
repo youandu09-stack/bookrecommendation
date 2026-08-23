@@ -6,8 +6,6 @@
     <title>그림책 추천하기</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tailwind CSS Fallback CDN for environments blocking script execution -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
@@ -16,10 +14,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* 기본 테마 컬러 정의 및 노션 iframe 차단 대비 폴백 CSS */
         :root {
             --peach-main: #fceeed;
-            --peach-strong: #f6d3cf;
+            --peach-strong: #f6d3cf;;
             --peach-dark: #424242;
             --peach-primary: #ec9e97;
             --peach-btn: #f6ccc5;
@@ -31,6 +28,7 @@
             background-color: #ffffff;
             margin: 0;
             padding: 0;
+            user-select: none;
         }
 
         .bg-peach-main { background-color: var(--peach-main) !important; }
@@ -42,13 +40,17 @@
         .bg-peach-btn { background-color: var(--peach-btn) !important; }
         .bg-peach-btn:hover { background-color: var(--peach-btn-hover) !important; }
 
-        /* 입력 폼 및 버튼 기본 스타일 강제 보장 */
         input[type="text"], input[type="password"], input[type="url"], textarea {
             border: 1px solid var(--peach-strong);
             background-color: #ffffff;
             border-radius: 0.75rem;
             padding: 0.5rem 0.75rem;
             box-sizing: border-box;
+            outline: none;
+        }
+        input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus, textarea:focus {
+            border-color: var(--peach-primary);
+            box-shadow: 0 0 0 2px rgba(224, 139, 126, 0.2);
         }
 
         button {
@@ -57,14 +59,16 @@
             border-radius: 0.75rem;
         }
 
-        /* 스크롤바 디자인 */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
         ::-webkit-scrollbar-thumb {
-            background: #e2cbbe;
+            background: #f6ccc5;
             border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ec9e97;
         }
     </style>
 </head>
@@ -76,19 +80,18 @@
             <div>
                 <h1 class="text-2xl sm:text-3xl font-bold text-peach-dark tracking-tight mt-1">그림책을 추천해 주세요</h1>
             </div>
-            <button id="btnToggleForm" onclick="toggleForm()" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-peach-btn text-white font-medium text-sm rounded-xl transition shadow-sm hover:shadow-md shrink-0">
+            <button id="btnToggleForm" onclick="toggleForm()" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-peach-btn hover:bg-peach-primary text-white font-medium text-sm rounded-xl transition shadow-sm hover:shadow-md shrink-0">
                 <i class="fa-solid fa-plus text-xs"></i>
                 <span id="btnToggleText">추천하기</span>
             </button>
         </header>
 
-        <!-- Write/Edit Form Drawer -->
         <section id="formSection" class="hidden mb-8 bg-peach-light border border-peach-strong rounded-2xl p-5 sm:p-6 shadow-sm transition-all">
             <div class="flex items-center justify-between pb-4 mb-4 border-b border-peach">
                 <h2 id="formTitle" class="text-lg font-bold text-peach-dark flex items-center gap-2">
                     <i class="fa-solid fa-pen-nib text-peach-primary"></i> 추천하기
                 </h2>
-                <button onclick="toggleForm(false)" class="text-stone-400 hover:text-stone-600 p-1 rounded-lg">
+                <button type="button" onclick="toggleForm(false)" class="text-stone-400 hover:text-stone-600 p-1 rounded-lg">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
@@ -149,24 +152,25 @@
                     <button type="button" onclick="toggleForm(false)" class="px-4 py-2 text-sm font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-xl">
                         취소
                     </button>
-                    <button type="submit" class="px-5 py-2 bg-peach-btn text-white text-sm font-medium rounded-xl">
+                    <button type="submit" class="px-5 py-2 bg-peach-btn hover:bg-peach-primary text-white text-sm font-medium rounded-xl transition">
                         저장하기
                     </button>
                 </div>
             </form>
         </section>
 
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6 bg-peach-light p-3.5 rounded-2xl border border-peach-strong">
+        <!-- 검색창 바깥 배경 영역 제거 및 아이콘 겹침 수정 -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
             <div class="relative flex-1">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-xs"></i>
-                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="책 제목, 저자, 키워드, 내용 검색..." class="w-full pl-9 pr-8 py-2 text-xs sm:text-sm">
-                <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 text-xs">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-xs z-10 pointer-events-none"></i>
+                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="책 제목, 저자, 키워드, 내용 검색..." class="w-full !pl-10 !pr-8 py-2 text-xs sm:text-sm">
+                <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 text-xs z-10">
                     <i class="fa-solid fa-circle-xmark"></i>
                 </button>
             </div>
 
             <div class="flex items-center justify-between sm:justify-end gap-2 text-xs text-stone-500 px-1">
-                <span id="activeFilterBadge" class="hidden inline-flex items-center gap-1 bg-peach-main text-peach-dark px-2.5 py-1 rounded-lg border border-peach-strong font-medium">
+                <span id="activeFilterBadge" class="hidden inline-flex items-center gap-1 bg-white text-peach-dark px-2.5 py-1 rounded-lg border border-peach-strong font-medium">
                     <span id="activeFilterText">#키워드</span>
                     <button onclick="clearKeywordFilter()" class="hover:text-stone-900 ml-1"><i class="fa-solid fa-xmark text-xs"></i></button>
                 </span>
@@ -174,11 +178,13 @@
             </div>
         </div>
 
+        <!-- 4-Column Grid for Post Cards -->
         <div id="postsList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <!-- Dynamic Post Cards -->
+            <!-- Dynamic Cards Loaded via JS -->
         </div>
     </div>
 
+    <!-- Password Modal -->
     <div id="passwordModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
         <div class="bg-white rounded-2xl border border-slate-200 p-6 max-w-sm w-full shadow-xl">
             <div class="text-center mb-4">
@@ -207,6 +213,7 @@
         </div>
     </div>
 
+    <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
         <div id="toastContent" class="flex items-center gap-2.5 px-4 py-3 bg-slate-800 text-white text-xs sm:text-sm font-medium rounded-xl shadow-lg border border-slate-700">
             <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
@@ -215,32 +222,54 @@
     </div>
 
     <script>
+        /* 노션 iframe 보안 차단 대응 세션 메모리 저장소 폴백 */
         const MASTER_PASSWORD = 'admin';
+        let memoryStorage = {};
         let postsData = [];
         let selectedKeyword = null;
         let searchQuery = '';
         let pendingAction = null;
         let currentImageBase64 = '';
 
-        function saveToLocalStorage() {
+        /* 노션 iframe 내 SecurityError 방지를 위한 Safe Storage Wrapper */
+        function safeGetItem(key) {
             try {
-                localStorage.setItem('picturebook_posts', JSON.stringify(postsData));
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    return window.localStorage.getItem(key);
+                }
             } catch (e) {
-                console.warn('LocalStorage save failed:', e);
+                console.warn('Notion iframe storage restricted. Using in-memory store:', e);
             }
+            return memoryStorage[key] || null;
+        }
+
+        function safeSetItem(key, value) {
+            try {
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    window.localStorage.setItem(key, value);
+                    return;
+                }
+            } catch (e) {
+                console.warn('Notion iframe storage write restricted. Using in-memory store:', e);
+            }
+            memoryStorage[key] = value;
+        }
+
+        function saveToLocalStorage() {
+            safeSetItem('picturebook_posts', JSON.stringify(postsData));
         }
 
         function initData() {
             try {
-                const saved = localStorage.getItem('picturebook_posts');
+                const saved = safeGetItem('picturebook_posts');
                 if (saved) {
                     postsData = JSON.parse(saved);
                 }
             } catch (e) {
-                console.warn('LocalStorage read failed:', e);
+                console.warn('Data parse error:', e);
             }
 
-            if (!postsData || postsData.length === 0) {
+            if (!postsData || !Array.isArray(postsData) || postsData.length === 0) {
                 postsData = [
                     {
                         id: 'demo-1',
@@ -343,7 +372,7 @@
             countEl.textContent = filtered.length;
 
             if (filtered.length === 0) {
-                listEl.className = "space-y-4";
+                listEl.className = "col-span-full";
                 listEl.innerHTML = `
                     <div class="bg-peach-light border border-peach-strong rounded-2xl p-12 text-center">
                         <div class="w-12 h-12 bg-white text-peach-primary rounded-full flex items-center justify-center mx-auto mb-3 text-lg border border-peach-strong">
@@ -366,6 +395,7 @@
                 `).join(' ');
 
                 const hasImage = post.imageUrl && post.imageUrl.trim().length > 0;
+                /* 이미지 미첨부 시 흰 배경에 책 아이콘 표시 */
                 const fallbackHtml = `<div class="w-full h-44 bg-white rounded-t-2xl flex items-center justify-center border-b border-peach"><i class="fa-solid fa-book-open text-peach-primary text-4xl opacity-70"></i></div>`;
 
                 const imageSection = hasImage 
@@ -404,7 +434,8 @@
                                     ${tagsHtml}
                                 </div>
 
-                                <p class="text-xs text-stone-700 leading-relaxed whitespace-pre-line bg-peach-light/50 p-2.5 rounded-xl border border-peach text-stone-600 line-clamp-4">${escapeHtml(trimmedContent)}</p>
+                                <!-- 책 소개 영역 line-clamp 제거 및 자체 스크롤 영역 적용 -->
+                                <p class="text-xs text-stone-700 leading-relaxed whitespace-pre-line bg-peach-light/50 p-2.5 rounded-xl border border-peach text-stone-600 max-h-32 overflow-y-auto">${escapeHtml(trimmedContent)}</p>
                             </div>
                         </div>
 
@@ -419,7 +450,7 @@
         };
 
         window.handleFormSubmit = function(e) {
-            e.preventDefault();
+            if (e) e.preventDefault();
             
             const id = document.getElementById('postId').value;
             const author = document.getElementById('inputAuthor').value.trim();
@@ -504,7 +535,7 @@
         };
 
         window.confirmPasswordAction = function(e) {
-            e.preventDefault();
+            if (e) e.preventDefault();
             if (!pendingAction) return;
 
             const inputPass = document.getElementById('modalPasswordInput').value;
@@ -519,6 +550,7 @@
                 return;
             }
 
+            /* 개별 비밀번호 또는 마스터 비밀번호(admin) 승인 */
             if (post.password !== inputPass && inputPass !== MASTER_PASSWORD) {
                 if (errorMsg) {
                     errorMsg.textContent = '비밀번호가 일치하지 않습니다.';
@@ -570,7 +602,7 @@
             if (postId) postId.value = '';
             clearImageInput();
             const formTitle = document.getElementById('formTitle');
-            if (formTitle) formTitle.innerHTML = `<i class="fa-solid fa-pen-nib text-peach-primary"></i> 새 기록 작성`;
+            if (formTitle) formTitle.innerHTML = `<i class="fa-solid fa-pen-nib text-peach-primary"></i> 새로 추천하기`;
         }
 
         window.filterByKeyword = function(kw) {
@@ -646,9 +678,16 @@
                 .replace(/'/g, "&#039;");
         }
 
-        window.onload = function() {
+        function startApp() {
             initData();
-        };
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startApp);
+        } else {
+            startApp();
+        }
+        window.onload = startApp;
     </script>
 </body>
 </html>
